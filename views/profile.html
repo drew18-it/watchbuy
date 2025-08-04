@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile | WatchBuy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="/css/style.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .text-gold { color: #bfa76f; }
+    .profile-section { min-height: 100vh; }
+    .file-upload-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .file-upload-wrapper input[type=file] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .upload-btn {
+      background: var(--gradient-secondary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .upload-btn:hover {
+      background: var(--secondary-hover);
+      transform: translateY(-2px);
+    }
+    .profile-preview {
+      position: relative;
+      display: inline-block;
+    }
+    .profile-preview img {
+      transition: var(--transition);
+    }
+    .profile-preview:hover img {
+      transform: scale(1.05);
+    }
+    .profile-preview .edit-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .profile-preview:hover .edit-overlay {
+      opacity: 1;
+    }
+    .form-floating {
+      position: relative;
+    }
+    .form-floating > .form-control {
+      height: calc(3.5rem + 2px);
+      line-height: 1.25;
+    }
+    .form-floating > label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      padding: 1rem 0.75rem;
+      pointer-events: none;
+      border: 1px solid transparent;
+      transform-origin: 0 0;
+      transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+    }
+    .form-floating > .form-control:focus,
+    .form-floating > .form-control:not(:placeholder-shown) {
+      padding-top: 1.625rem;
+      padding-bottom: 0.625rem;
+    }
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+      opacity: .65;
+      transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+  </style>
+</head>
+<body>
+  <!-- Enhanced Navbar -->
+  <nav class="navbar navbar-expand-lg shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/">
+        <i class="bi bi-clock-history me-2"></i>Watch<span class="text-gold">Buy</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-between" id="mainNav">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house me-1"></i>Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/shop"><i class="bi bi-shop me-1"></i>Shop</a></li>
+          <li class="nav-item"><a class="nav-link" href="/search"><i class="bi bi-search me-1"></i>Search</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/profile"><i class="bi bi-person me-1"></i>Profile</a></li>
+        </ul>
+        <div class="d-flex align-items-center" id="auth-buttons"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Profile Section -->
+  <section class="profile-section">
+    <div class="container">
+      <!-- Profile Header -->
+      <div class="profile-header text-center mb-5">
+        <h1 class="display-5 fw-bold mb-3">
+          <i class="bi bi-person-circle me-3 text-gold"></i>My Profile
+        </h1>
+        <p class="lead text-muted">Manage your account information and preferences</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Current Profile Info -->
+        <div class="col-lg-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-gradient-primary text-white">
+              <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Current Information</h5>
+            </div>
+            <div class="card-body text-center">
+              <div class="profile-preview mb-4">
+                <img id="currentProfileImage"
+                     src="https://via.placeholder.com/200x200?text=Loading..."
+                     alt="Current Profile"
+                     class="img-fluid rounded-circle shadow-sm"
+                     style="width: 200px; height: 200px; object-fit: cover; border: 4px solid var(--secondary);" />
+                <div class="edit-overlay">
+                  <i class="bi bi-camera text-white fs-3"></i>
+                </div>
+              </div>
+              
+              <div class="profile-details">
+                <h4 id="currentName" class="fw-bold text-primary mb-2">Loading...</h4>
+                <p class="text-muted mb-3">
+                  <i class="bi bi-envelope me-2"></i>
+                  <span id="currentEmail">Loading...</span>
+                </p>
+                <div class="profile-stats">
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <h5 class="fw-bold text-gold mb-1" id="orderCount">0</h5>
+                        <small class="text-muted">Orders</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <h5 class="fw-bold text-gold mb-1" id="totalSpent">$0</h5>
+                        <small class="text-muted">Spent</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="stat-item">
+                        <h5 class="fw-bold text-gold mb-1" id="memberSince">-</h5>
+                        <small class="text-muted">Member</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Update Profile Form -->
+        <div class="col-lg-8">
+          <div class="card shadow-sm">
+            <div class="card-header bg-gradient-primary text-white">
+              <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Update Profile</h5>
+            </div>
+            <div class="card-body">
+              <form id="profileForm" enctype="multipart/form-data" novalidate>
+                <!-- Profile Picture Section -->
+                <div class="row mb-4">
+                  <div class="col-md-4 text-center">
+                    <div class="profile-preview mb-3">
+                      <img id="profileImage"
+                           src="https://via.placeholder.com/150x150?text=Preview"
+                           alt="Profile Preview"
+                           class="img-fluid rounded-circle shadow-sm"
+                           style="width: 150px; height: 150px; object-fit: cover; border: 3px solid var(--secondary);" />
+                      <div class="edit-overlay">
+                        <i class="bi bi-camera text-white fs-4"></i>
+                      </div>
+                    </div>
+                    <div class="file-upload-wrapper">
+                      <input type="file" name="image" accept="image/*" id="profileImageInput" />
+                      <button type="button" class="upload-btn" onclick="document.getElementById('profileImageInput').click()">
+                        <i class="bi bi-upload"></i>Change Photo
+                      </button>
+                    </div>
+                    <small class="text-muted d-block mt-2">JPG, PNG or GIF. Max 5MB.</small>
+                  </div>
+                  
+                  <div class="col-md-8">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" name="fname" class="form-control" id="fnameInput" placeholder="First Name" required />
+                          <label for="fnameInput">First Name</label>
+                          <div class="invalid-feedback">Please enter your first name.</div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" name="lname" class="form-control" id="lnameInput" placeholder="Last Name" required />
+                          <label for="lnameInput">Last Name</label>
+                          <div class="invalid-feedback">Please enter your last name.</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="form-floating mt-3">
+                      <input type="email" name="email" class="form-control" id="emailInput" placeholder="Email Address" required />
+                      <label for="emailInput">Email Address</label>
+                      <div class="invalid-feedback">Please enter a valid email address.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Password Section -->
+                <div class="row mb-4">
+                  <div class="col-12">
+                    <h6 class="fw-bold mb-3">
+                      <i class="bi bi-shield-lock me-2 text-gold"></i>Change Password
+                    </h6>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="password" name="password" class="form-control" id="passwordInput" placeholder="New Password" />
+                          <label for="passwordInput">New Password</label>
+                          <div class="form-text">Leave blank to keep current password</div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="password" name="confirmPassword" class="form-control" id="confirmPasswordInput" placeholder="Confirm Password" />
+                          <label for="confirmPasswordInput">Confirm Password</label>
+                          <div class="invalid-feedback">Passwords do not match.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-3 justify-content-end">
+                  <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                  </button>
+                  <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                    <i class="bi bi-check-circle me-2"></i>Update Profile
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enhanced Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h5><i class="bi bi-clock-history me-2"></i>WatchBuy</h5>
+          <p>Premium luxury watches for the discerning collector. Timeless elegance meets modern craftsmanship.</p>
+        </div>
+        <div class="footer-section">
+          <h5>Quick Links</h5>
+          <p><a href="/"><i class="bi bi-house me-2"></i>Home</a></p>
+          <p><a href="/shop"><i class="bi bi-shop me-2"></i>Shop</a></p>
+          <p><a href="/search"><i class="bi bi-search me-2"></i>Search</a></p>
+        </div>
+        <div class="footer-section">
+          <h5>Contact</h5>
+          <p><i class="bi bi-envelope me-2"></i>support@watchbuy.com</p>
+          <p><i class="bi bi-telephone me-2"></i>+63 912 345 6789</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 WatchBuy Co. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script>
+    const placeholderImg = 'https://via.placeholder.com/200x200?text=No+Image';
+    let originalFormData = {};
+
+    // Enhanced fetch with better error handling
+    async function fetchWithNotification(url, options, messages = {}) {
+      if (messages.loadingMessage) notify.info('Please wait', messages.loadingMessage);
+      
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeout);
+        
+        const contentType = res.headers.get('content-type');
+        const data = contentType?.includes('application/json') ? await res.json() : {};
+        
+        if (!res.ok) {
+          throw new Error(data.error || data.message || `HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        if (messages.successMessage) notify.success('Success', messages.successMessage);
+        return data;
+      } catch (err) {
+        const errorMessage = err.name === 'AbortError' ? 'Request timed out' : err.message;
+        notify.error('Error', messages.errorMessage || errorMessage);
+        return null;
+      }
+    }
+
+    // Load user profile data
+    async function loadUserProfile() {
+      try {
+        const user = await fetchWithNotification('/api/user', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }, {
+          loadingMessage: 'Loading profile...',
+          errorMessage: 'Failed to load profile'
+        });
+
+        if (!user) {
+          setTimeout(() => window.location.href = '/login', 2000);
+          return;
+        }
+
+        // Update UI with user data
+        updateProfileUI(user);
+        populateForm(user);
+        originalFormData = { ...user };
+        
+        // Load additional stats
+        loadUserStats();
+        
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        notify.error('Error', 'Unable to load profile. Redirecting...');
+        setTimeout(() => window.location.href = '/login', 2000);
+      }
+    }
+
+    // Update profile UI elements
+    function updateProfileUI(user) {
+      const imagePath = user.img_path?.startsWith('/uploads/') 
+        ? user.img_path 
+        : (user.img_path ? `/uploads/${user.img_path}` : placeholderImg);
+
+      document.getElementById('currentProfileImage').src = imagePath;
+      document.getElementById('profileImage').src = imagePath;
+      document.getElementById('currentName').textContent = `${user.fname} ${user.lname}`;
+      document.getElementById('currentEmail').textContent = user.email;
+    }
+
+    // Populate form with user data
+    function populateForm(user) {
+      document.getElementById('fnameInput').value = user.fname || '';
+      document.getElementById('lnameInput').value = user.lname || '';
+      document.getElementById('emailInput').value = user.email || '';
+    }
+
+    // Load user statistics
+    async function loadUserStats() {
+      try {
+        const stats = await fetch('/api/user/stats');
+        if (stats.ok) {
+          const data = await stats.json();
+          document.getElementById('orderCount').textContent = data.orderCount || 0;
+          document.getElementById('totalSpent').textContent = `$${(data.totalSpent || 0).toLocaleString()}`;
+          document.getElementById('memberSince').textContent = data.memberSince || '-';
+        }
+      } catch (err) {
+        console.error('Error loading stats:', err);
+      }
+    }
+
+    // Reset form to original values
+    function resetForm() {
+      populateForm(originalFormData);
+      document.getElementById('profileImage').src = document.getElementById('currentProfileImage').src;
+      document.getElementById('profileImageInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('confirmPasswordInput').value = '';
+      
+      // Remove validation classes
+      document.querySelectorAll('.form-control').forEach(input => {
+        input.classList.remove('is-valid', 'is-invalid');
+      });
+      
+      notify.info('Form Reset', 'Form has been reset to original values');
+    }
+
+    // Validate form
+    function validateForm() {
+      let isValid = true;
+      const form = document.getElementById('profileForm');
+      
+      // Reset validation states
+      form.querySelectorAll('.form-control').forEach(input => {
+        input.classList.remove('is-valid', 'is-invalid');
+      });
+
+      // Required fields validation
+      const requiredFields = ['fnameInput', 'lnameInput', 'emailInput'];
+      requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+          field.classList.add('is-invalid');
+          isValid = false;
+        } else {
+          field.classList.add('is-valid');
+        }
+      });
+
+      // Email validation
+      const emailField = document.getElementById('emailInput');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailField.value.trim()) {
+        if (!emailRegex.test(emailField.value)) {
+          emailField.classList.remove('is-valid');
+          emailField.classList.add('is-invalid');
+          isValid = false;
+        } else {
+          emailField.classList.remove('is-invalid');
+          emailField.classList.add('is-valid');
+        }
+      }
+
+      // Password validation
+      const passwordField = document.getElementById('passwordInput');
+      const confirmPasswordField = document.getElementById('confirmPasswordInput');
+      
+      // Only validate passwords if at least one password field has content
+      if (passwordField.value.trim() || confirmPasswordField.value.trim()) {
+        // If password is provided, it must be at least 6 characters
+        if (passwordField.value.trim() && passwordField.value.length < 6) {
+          passwordField.classList.remove('is-valid');
+          passwordField.classList.add('is-invalid');
+          isValid = false;
+        } else if (passwordField.value.trim()) {
+          passwordField.classList.remove('is-invalid');
+          passwordField.classList.add('is-valid');
+        }
+        
+        // If confirm password is provided, it must match password
+        if (confirmPasswordField.value.trim()) {
+          if (passwordField.value !== confirmPasswordField.value) {
+            confirmPasswordField.classList.remove('is-valid');
+            confirmPasswordField.classList.add('is-invalid');
+            isValid = false;
+          } else {
+            confirmPasswordField.classList.remove('is-invalid');
+            confirmPasswordField.classList.add('is-valid');
+          }
+        }
+        
+        // If password is provided but confirm password is empty, show error
+        if (passwordField.value.trim() && !confirmPasswordField.value.trim()) {
+          confirmPasswordField.classList.remove('is-valid');
+          confirmPasswordField.classList.add('is-invalid');
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    // Enhanced validation with detailed error messages
+    function validateFormWithDetails() {
+      let isValid = true;
+      const errors = [];
+      const form = document.getElementById('profileForm');
+      
+      // Reset validation states
+      form.querySelectorAll('.form-control').forEach(input => {
+        input.classList.remove('is-valid', 'is-invalid');
+      });
+
+      // Required fields validation
+      const fname = document.getElementById('fnameInput');
+      const lname = document.getElementById('lnameInput');
+      const email = document.getElementById('emailInput');
+      
+      if (!fname.value.trim()) {
+        fname.classList.add('is-invalid');
+        errors.push('First name is required');
+        isValid = false;
+      } else {
+        fname.classList.add('is-valid');
+      }
+
+      if (!lname.value.trim()) {
+        lname.classList.add('is-invalid');
+        errors.push('Last name is required');
+        isValid = false;
+      } else {
+        lname.classList.add('is-valid');
+      }
+
+      if (!email.value.trim()) {
+        email.classList.add('is-invalid');
+        errors.push('Email address is required');
+        isValid = false;
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.value)) {
+          email.classList.add('is-invalid');
+          errors.push('Please enter a valid email address');
+          isValid = false;
+        } else {
+          email.classList.add('is-valid');
+        }
+      }
+
+      // Password validation
+      const password = document.getElementById('passwordInput');
+      const confirmPassword = document.getElementById('confirmPasswordInput');
+      
+      if (password.value.trim() || confirmPassword.value.trim()) {
+        if (password.value.trim() && password.value.length < 6) {
+          password.classList.add('is-invalid');
+          errors.push('Password must be at least 6 characters long');
+          isValid = false;
+        } else if (password.value.trim()) {
+          password.classList.add('is-valid');
+        }
+        
+        if (password.value.trim() && !confirmPassword.value.trim()) {
+          confirmPassword.classList.add('is-invalid');
+          errors.push('Please confirm your password');
+          isValid = false;
+        } else if (confirmPassword.value.trim() && password.value !== confirmPassword.value) {
+          confirmPassword.classList.add('is-invalid');
+          errors.push('Passwords do not match');
+          isValid = false;
+        } else if (confirmPassword.value.trim()) {
+          confirmPassword.classList.add('is-valid');
+        }
+      }
+
+      return {
+        isValid,
+        message: errors.length > 0 ? errors.join(', ') : 'Please fix the errors in the form'
+      };
+    }
+
+    // Handle image preview
+    function handleImagePreview(input) {
+      const file = input.files[0];
+      if (file) {
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          notify.error('Error', 'Image size must be less than 5MB');
+          input.value = '';
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          notify.error('Error', 'Please select a valid image file');
+          input.value = '';
+          return;
+        }
+
+        const url = URL.createObjectURL(file);
+        document.getElementById('profileImage').src = url;
+        
+        // Clean up object URL after image loads
+        document.getElementById('profileImage').onload = () => {
+          URL.revokeObjectURL(url);
+        };
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserProfile();
+
+      // Image upload handler
+      document.getElementById('profileImageInput').addEventListener('change', (e) => {
+        handleImagePreview(e.target);
+      });
+
+      // Form submission handler
+      document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Validate form and get specific error messages
+        const validationResult = validateFormWithDetails();
+        if (!validationResult.isValid) {
+          notify.error('Validation Error', validationResult.message);
+          return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Updating...';
+
+        try {
+          const formData = new FormData(e.target);
+          
+          const result = await fetchWithNotification('/api/user/update', {
+            method: 'POST',
+            body: formData
+          }, {
+            loadingMessage: 'Updating profile...',
+            successMessage: 'Profile updated successfully!',
+            errorMessage: 'Failed to update profile'
+          });
+
+          if (result?.success) {
+            // Reload profile data
+            await loadUserProfile();
+            
+            // Reset password fields
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+            
+            // Update original form data
+            originalFormData = {
+              ...originalFormData,
+              fname: formData.get('fname'),
+              lname: formData.get('lname'),
+              email: formData.get('email')
+            };
+          }
+        } catch (err) {
+          console.error('Update error:', err);
+        } finally {
+          // Restore button state
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+
+      // Real-time validation for all fields
+      document.getElementById('fnameInput').addEventListener('input', function() {
+        if (this.value.trim()) {
+          this.classList.remove('is-invalid');
+          this.classList.add('is-valid');
+        } else {
+          this.classList.remove('is-valid');
+          this.classList.add('is-invalid');
+        }
+      });
+
+      document.getElementById('lnameInput').addEventListener('input', function() {
+        if (this.value.trim()) {
+          this.classList.remove('is-invalid');
+          this.classList.add('is-valid');
+        } else {
+          this.classList.remove('is-valid');
+          this.classList.add('is-invalid');
+        }
+      });
+
+      document.getElementById('emailInput').addEventListener('input', function() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value.trim()) {
+          if (emailRegex.test(this.value)) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+          } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+          }
+        } else {
+          this.classList.remove('is-valid', 'is-invalid');
+        }
+      });
+
+      document.getElementById('passwordInput').addEventListener('input', function() {
+        const confirmPassword = document.getElementById('confirmPasswordInput').value;
+        
+        if (this.value.trim()) {
+          if (this.value.length >= 6) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+          } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+          }
+          
+          // Also validate confirm password if it has content
+          if (confirmPassword) {
+            if (this.value === confirmPassword) {
+              document.getElementById('confirmPasswordInput').classList.remove('is-invalid');
+              document.getElementById('confirmPasswordInput').classList.add('is-valid');
+            } else {
+              document.getElementById('confirmPasswordInput').classList.remove('is-valid');
+              document.getElementById('confirmPasswordInput').classList.add('is-invalid');
+            }
+          }
+        } else {
+          this.classList.remove('is-valid', 'is-invalid');
+        }
+      });
+
+      document.getElementById('confirmPasswordInput').addEventListener('input', function() {
+        const password = document.getElementById('passwordInput').value;
+        
+        if (this.value.trim()) {
+          if (password && this.value === password) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+          } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+          }
+        } else {
+          this.classList.remove('is-valid', 'is-invalid');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

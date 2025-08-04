@@ -1,0 +1,38 @@
+<form id="editForm" enctype="multipart/form-data">
+  <input type="text" name="name" id="name" required />
+  <input type="text" name="description" id="description" />
+  <input type="number" name="price" id="price" />
+  <input type="number" name="stock" id="stock" />
+  <select name="category_id" id="category_id"></select>
+  <input type="file" name="image" />
+  <button type="submit">Update</button>
+</form>
+<script>
+  const id = window.location.pathname.split('/').pop();
+  fetch(`/api/products/${id}`)
+    .then(res => res.json())
+    .then(product => {
+      document.getElementById('name').value = product.name;
+      document.getElementById('description').value = product.description;
+      document.getElementById('price').value = product.price;
+      document.getElementById('stock').value = product.stock;
+      document.getElementById('category_id').value = product.category_id;
+    });
+
+  document.getElementById('editForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      body: formData,
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('Updated!');
+          location.href = '/admin/products';
+        } else {
+          alert('Failed to update.');
+        }
+      });
+  });
+</script>

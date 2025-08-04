@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manage Products</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="/css/style.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4">
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/admin/dashboard">Admin Dashboard</a>
+      <div class="navbar-nav">
+        <a class="nav-link" href="/admin-users">Users</a>
+        <a class="nav-link" href="/admin-orders">Orders</a>
+        <a class="nav-link active" href="/admin/products">Products</a>
+        <a class="nav-link" href="/admin-charts">Analytics</a>
+        <a class="nav-link text-danger" href="/logout">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <h1 class="mb-4">Manage Products</h1>
+
+  <!-- Add Product Form -->
+  <form id="addProductForm" enctype="multipart/form-data">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label>Name</label>
+        <input type="text" name="name" class="form-control" required />
+      </div>
+      <div class="col-md-4 mb-3">
+        <label>Description</label>
+        <input type="text" name="description" class="form-control" />
+      </div>
+      <div class="col-md-2 mb-3">
+        <label>Quantity</label>
+        <input type="number" name="quantity" class="form-control" required />
+      </div>
+      <div class="col-md-2 mb-3">
+        <label>Category</label>
+        <select name="category_id" id="categorySelect" class="form-select" required></select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label>Images</label>
+        <input type="file" name="images" class="form-control" accept="image/*" multiple required />
+      </div>
+    </div>
+    <button class="btn btn-primary" type="submit" id="addProductBtn">
+      <span class="btn-text">Add Product</span>
+      <span class="btn-loading d-none">
+        <div class="loading"></div> Adding...
+      </span>
+    </button>
+  </form>
+
+  <!-- Add Category Form -->
+  <div class="card my-4">
+    <div class="card-header">Add Category</div>
+    <div class="card-body">
+      <form id="addCategoryForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Category Name</label>
+            <input type="text" name="name" class="form-control" required />
+          </div>
+        </div>
+        <button class="btn btn-secondary" type="submit" id="addCategoryBtn">
+          <span class="btn-text">Add Category</span>
+          <span class="btn-loading d-none">
+            <div class="loading"></div> Adding...
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Products List</h5>
+      <button class="btn btn-outline-primary btn-sm" onclick="loadProducts()" id="refreshProductsBtn">
+        <span class="btn-text">🔄 Refresh</span>
+        <span class="btn-loading d-none">
+          <div class="loading"></div> Loading...
+        </span>
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="productsLoading" class="text-center py-4 d-none">
+        <div class="loading" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+        <p class="mt-2 text-muted">Loading products...</p>
+      </div>
+      <div id="productsError" class="alert alert-danger d-none">
+        <strong>Failed to load products.</strong>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="loadProducts()">Try Again</button>
+      </div>
+      <table class="table table-bordered" id="productsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Category</th>
+            <th>Images</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="editProductForm" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Product</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body row g-3 px-3">
+            <input type="hidden" name="id" />
+            <div class="col-md-6">
+              <label>Name</label>
+              <input type="text" name="name" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+              <label>Description</label>
+              <input type="text" name="description" class="form-control" />
+            </div>
+            <div class="col-md-4">
+              <label>Quantity</label>
+              <input type="number" name="quantity" class="form-control" required />
+            </div>
+            <div class="col-md-4">
+              <label>Category</label>
+              <select name="category_id" class="form-select" id="editCategorySelect" required></select>
+            </div>
+            <div class="col-md-4">
+              <label>Images (optional)</label>
+              <input type="file" name="images" class="form-control" accept="image/*" multiple />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" type="submit" id="updateProductBtn">
+              <span class="btn-text">Update</span>
+              <span class="btn-loading d-none">
+                <div class="loading"></div> Updating...
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Toast notification system
+    function showToast(message, type = 'info', duration = 5000) {
+      const toast = document.createElement('div');
+      toast.className = `toast-message toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-header">
+          <span class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+          <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="toast-content">${message}</div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, duration);
+    }
+
+    // Loading state management
+    function setButtonLoading(buttonId, isLoading) {
+      const button = document.getElementById(buttonId);
+      if (!button) return;
+      
+      const btnText = button.querySelector('.btn-text');
+      const btnLoading = button.querySelector('.btn-loading');
+      
+      if (isLoading) {
+        button.disabled = true;
+        btnText.classList.add('d-none');
+        btnLoading.classList.remove('d-none');
+      } else {
+        button.disabled = false;
+        btnText.classList.remove('d-none');
+        btnLoading.classList.add('d-none');
+      }
+    }
+
+    const loadCategories = async () => {
+      try {
+        showToast('Loading categories...', 'info', 2000);
+        
+        const res = await fetch('/api/categories');
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        const addSelect = document.getElementById('categorySelect');
+        const editSelect = document.getElementById('editCategorySelect');
+        
+        [addSelect, editSelect].forEach(select => {
+          if (!select) return;
+          select.innerHTML = '<option value="">-- Select Category --</option>';
+          data.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+          });
+        });
+        
+        showToast(`✅ Loaded ${data.length} categories successfully`, 'success');
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        showToast('❌ Failed to load categories: ' + error.message, 'error');
+      }
+    };
+
+    const loadProducts = async () => {
+      const loadingDiv = document.getElementById('productsLoading');
+      const errorDiv = document.getElementById('productsError');
+      const table = document.getElementById('productsTable');
+      const refreshBtn = document.getElementById('refreshProductsBtn');
+      
+      try {
+        // Show loading state
+        loadingDiv.classList.remove('d-none');
+        errorDiv.classList.add('d-none');
+        table.classList.add('d-none');
+        setButtonLoading('refreshProductsBtn', true);
+        
+        showToast('Loading products...', 'info', 2000);
+        
+        const res = await fetch('/api/products');
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        const tbody = document.querySelector('#productsTable tbody');
+        tbody.innerHTML = '';
+        
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No products found</td></tr>';
+        } else {
+          data.forEach(p => {
+            const tr = document.createElement('tr');
+            let imagesHtml = '';
+            if (Array.isArray(p.images) && p.images.length > 0) {
+              imagesHtml = p.images.map(img => `<img src="${img}" width="60" style="margin:2px;" alt="${p.name}"/>`).join('');
+            } else if (p.img_path) {
+              imagesHtml = `<img src="${p.img_path}" width="60" alt="${p.name}"/>`;
+            }
+            tr.innerHTML = `
+              <td>${p.id}</td>
+              <td>${p.name}</td>
+              <td>${p.description || ''}</td>
+              <td>${p.quantity}</td>
+              <td>${p.category_name || p.category_id}</td>
+              <td>${imagesHtml}</td>
+              <td>
+                <button class="btn btn-sm btn-warning me-1" onclick="editProduct(${p.id})">
+                  ✏️ Edit
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">
+                  🗑️ Delete
+                </button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+        
+        // Hide loading, show table
+        loadingDiv.classList.add('d-none');
+        table.classList.remove('d-none');
+        setButtonLoading('refreshProductsBtn', false);
+        
+        showToast(`✅ Loaded ${data.length} products successfully`, 'success');
+      } catch (error) {
+        console.error('Error loading products:', error);
+        
+        // Show error state
+        loadingDiv.classList.add('d-none');
+        errorDiv.classList.remove('d-none');
+        table.classList.add('d-none');
+        setButtonLoading('refreshProductsBtn', false);
+        
+        showToast('❌ Failed to load products: ' + error.message, 'error');
+      }
+    };
+
+    document.getElementById('addProductForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      
+      setButtonLoading('addProductBtn', true);
+      showToast('Adding product...', 'info', 2000);
+      
+      try {
+        const formData = new FormData(e.target);
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+          e.target.reset();
+          await loadProducts();
+          showToast('✅ Product added successfully!', 'success');
+        } else {
+          throw new Error(result.error || 'Failed to add product');
+        }
+      } catch (error) {
+        console.error('Error adding product:', error);
+        showToast('❌ Failed to add product: ' + error.message, 'error');
+      } finally {
+        setButtonLoading('addProductBtn', false);
+      }
+    });
+
+    document.getElementById('addCategoryForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      
+      setButtonLoading('addCategoryBtn', true);
+      showToast('Adding category...', 'info', 2000);
+      
+      try {
+        const formData = new FormData(e.target);
+        const res = await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(formData.entries()))
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+          e.target.reset();
+          await loadCategories();
+          showToast('✅ Category added successfully!', 'success');
+        } else {
+          throw new Error(result.error || 'Failed to add category');
+        }
+      } catch (error) {
+        console.error('Error adding category:', error);
+        showToast('❌ Failed to add category: ' + error.message, 'error');
+      } finally {
+        setButtonLoading('addCategoryBtn', false);
+      }
+    });
+
+    async function editProduct(id) {
+      try {
+        showToast('Loading product details...', 'info', 2000);
+        
+        const res = await fetch(`/api/products/${id}`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const product = await res.json();
+        const form = document.getElementById('editProductForm');
+        
+        form.id.value = product.id;
+        form.name.value = product.name;
+        form.description.value = product.description || '';
+        form.quantity.value = product.quantity;
+        form.category_id.value = product.category_id;
+        
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+        showToast('✅ Product details loaded successfully', 'success');
+      } catch (error) {
+        console.error('Error loading product details:', error);
+        showToast('❌ Failed to load product details: ' + error.message, 'error');
+      }
+    }
+
+    document.getElementById('editProductForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      
+      setButtonLoading('updateProductBtn', true);
+      showToast('Updating product...', 'info', 2000);
+      
+      try {
+        const formData = new FormData(e.target);
+        const id = formData.get('id');
+        
+        const res = await fetch(`/api/products/${id}`, {
+          method: 'PUT',
+          body: formData
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+          await loadProducts();
+          bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+          showToast('✅ Product updated successfully!', 'success');
+        } else {
+          throw new Error(result.error || 'Failed to update product');
+        }
+      } catch (error) {
+        console.error('Error updating product:', error);
+        showToast('❌ Failed to update product: ' + error.message, 'error');
+      } finally {
+        setButtonLoading('updateProductBtn', false);
+      }
+    });
+
+    async function deleteProduct(id) {
+      if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        showToast('Deleting product...', 'warning', 2000);
+        
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        
+        if (res.ok) {
+          await loadProducts();
+          showToast('✅ Product deleted successfully!', 'success');
+        } else {
+          throw new Error(result.error || 'Failed to delete product');
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showToast('❌ Failed to delete product: ' + error.message, 'error');
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      showToast('🔄 Initializing admin products page...', 'info', 2000);
+      
+      try {
+        await Promise.all([loadCategories(), loadProducts()]);
+        showToast('✅ Admin products page loaded successfully!', 'success');
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        showToast('❌ Failed to initialize page: ' + error.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

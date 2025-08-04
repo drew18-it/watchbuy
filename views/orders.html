@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | WatchBuy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/">
+        <i class="bi bi-watch"></i> WatchBuy
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/shop">Shop</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/search">Search</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/cart">
+              <i class="bi bi-cart"></i> Cart
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/orders">
+              <i class="bi bi-box"></i> Orders
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/profile">
+              <i class="bi bi-person"></i> Profile
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">My Orders</li>
+      </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h2 mb-1">My Orders</h1>
+        <p class="text-muted mb-0">View your order history and track your purchases</p>
+      </div>
+      <a href="/" class="btn btn-outline-primary">
+        <i class="bi bi-house"></i> Back to Home
+      </a>
+    </div>
+
+    <!-- Orders Container -->
+    <div id="ordersContainer">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading your orders...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/notifications.js"></script>
+  <script>
+    // Enhanced order loading with better UI and error handling
+    async function loadOrders() {
+      const ordersContainer = document.getElementById('ordersContainer');
+      
+      try {
+        console.log('Attempting to fetch orders...');
+        
+        // First check if user is logged in
+        const sessionResponse = await fetch('/test-session');
+        const sessionData = await sessionResponse.json();
+        console.log('Session data:', sessionData);
+        
+        if (!sessionData.user) {
+          ordersContainer.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+              <h4 class="mt-3 text-warning">Please Login</h4>
+              <p class="text-muted mb-4">You need to be logged in to view your orders.</p>
+              <a href="/login" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+              </a>
+            </div>
+          `;
+          return;
+        }
+        
+        const response = await fetch('/api/orders');
+        console.log('Orders response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Orders response error:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Orders data received:', data);
+        
+        if (data.length === 0) {
+          ordersContainer.innerHTML = `
+            <div class="text-center py-5">
+              <i class="bi bi-box text-muted" style="font-size: 4rem;"></i>
+              <h4 class="mt-3 text-muted">No Orders Yet</h4>
+              <p class="text-muted mb-4">You haven't placed any orders yet.</p>
+              <a href="/shop" class="btn btn-primary">
+                <i class="bi bi-shop"></i> Start Shopping
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        // Sort orders by date (newest first)
+        data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        ordersContainer.innerHTML = data.map(order => {
+          const orderDate = new Date(order.created_at);
+          const formattedDate = orderDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          const statusBadge = getStatusBadge(order.status);
+          const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+          
+          const itemsList = order.items.map(item => `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+              <div>
+                <strong>${item.name}</strong>
+                <br>
+                <small class="text-muted">Quantity: ${item.quantity}</small>
+              </div>
+              <span class="badge bg-light text-dark">$${(item.price || 0).toFixed(2)}</span>
+            </div>
+          `).join('');
+
+          return `
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="mb-1">Order #${order.id}</h5>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar3"></i> ${formattedDate}
+                    </small>
+                  </div>
+                  <div class="text-end">
+                    ${statusBadge}
+                    <br>
+                    <small class="text-muted">${totalItems} item${totalItems !== 1 ? 's' : ''}</small>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  ${itemsList}
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                  <strong>Total:</strong>
+                  <strong class="text-primary">$${order.total || 0}</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('Error loading orders:', err);
+        ordersContainer.innerHTML = `
+          <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-warning">Error Loading Orders</h4>
+            <p class="text-muted mb-4">We couldn't load your orders. Please try again later.</p>
+            <p class="text-danger small">Error: ${err.message}</p>
+            <button onclick="loadOrders()" class="btn btn-outline-primary">
+              <i class="bi bi-arrow-clockwise"></i> Try Again
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Helper function to get status badge
+    function getStatusBadge(status) {
+      const statusMap = {
+        'pending': { class: 'bg-warning', icon: 'bi-clock' },
+        'processing': { class: 'bg-info', icon: 'bi-gear' },
+        'shipped': { class: 'bg-primary', icon: 'bi-truck' },
+        'delivered': { class: 'bg-success', icon: 'bi-check-circle' },
+        'cancelled': { class: 'bg-danger', icon: 'bi-x-circle' }
+      };
+      
+      const statusInfo = statusMap[status.toLowerCase()] || { class: 'bg-secondary', icon: 'bi-question' };
+      
+      return `<span class="badge ${statusInfo.class}">
+        <i class="${statusInfo.icon}"></i> ${status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>`;
+    }
+
+    // Load orders when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOrders();
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 mt-5">
+    <p class="mb-1">&copy; 2025 WatchBuy Co.</p>
+    <small>Contact us: support@watchbuy.com | +63 912 345 6789</small>
+  </footer>
+</body>
+</html>
