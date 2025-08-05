@@ -35,10 +35,10 @@ router.post('/', async (req, res) => {
     // Calculate total amount
     const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Insert order
+    // Insert order with total amount
     const [orderResult] = await db.query(
-      'INSERT INTO orders (user_id) VALUES (?)',
-      [userId]
+      'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
+      [userId, totalAmount]
     );
     const orderId = orderResult.insertId;
 

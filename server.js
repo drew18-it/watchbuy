@@ -11,6 +11,7 @@ const checkoutRoutes = require('./routes/checkout');
 const orderRoutes = require('./routes/orders');
 const profileRoutes = require('./routes/profile'); 
 const searchRoutes = require('./routes/search');
+const reviewRoutes = require('./routes/reviews');
 
 const app = express();
 const PORT = 3000;
@@ -25,10 +26,14 @@ app.use((err, req, res, next) => {
 });
 
 app.use(session({
-  secret: 'your-secret-key', 
+  secret: 'watchbuy-secret-key-2025', 
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } 
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  } 
 }));
 
 app.use(express.urlencoded({ extended: true }));
@@ -98,7 +103,6 @@ app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'views', 'r
 app.get('/cart', (req, res) => res.sendFile(path.join(__dirname, 'views', 'cart.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, 'views', 'shop.html')));
 app.get('/search', (req, res) => res.sendFile(path.join(__dirname, 'views', 'search.html')));
-app.get('/cart', (req, res) => res.sendFile(path.join(__dirname, 'views', 'cart.html')));
 app.get('/orders', (req, res) => res.sendFile(path.join(__dirname, 'views', 'orders.html')));  
 app.get('/admin-users', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin-users.html'));
@@ -116,9 +120,20 @@ app.get('/profile', (req, res) => {
   if (!req.session.user) return res.redirect('/login.html');
   res.sendFile(path.join(__dirname, 'views', 'profile.html'));
 });
+
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session:', err);
+    }
+    res.redirect('/');
+  });
+});
 app.get('/product.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'product.html'));
 });
+
+
 app.get('/admin-categories', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin-categories.html'));
 });
@@ -141,7 +156,7 @@ async function getDashboardStats() {
   const db = require('./config/db');
   const [userResult] = await db.query('SELECT COUNT(*) AS total_users FROM users');
   const [orderResult] = await db.query('SELECT COUNT(*) AS total_orders FROM orders');
-  const [revenueResult] = await db.query('SELECT SUM(total_amount) AS total_revenue FROM orders');
+  const [revenueResult] = await db.query('SELECT COALESCE(SUM(total_amount), 0) AS total_revenue FROM orders WHERE status = "paid"');
 
   return {
     totalUsers: userResult[0].total_users,
@@ -159,8 +174,18 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Add logging for reviews routes
+app.use('/api/reviews', (req, res, next) => {
+  console.log(`Reviews API called: ${req.method} ${req.path}`);
+  console.log('Request body:', req.body);
+  next();
+}, reviewRoutes);
+
 app.use('/api', profileRoutes);
 app.use('/search', searchRoutes);
+
+
 
 app.listen(PORT, () => {
   console.log(` Server running at http://localhost:${PORT}`);

@@ -272,13 +272,7 @@
       }
     });
 
-  const priceMap = {
-    1: 1499,
-    2: 2299,
-    3: 1299,
-    4: 999,
-    // Add more as needed
-  };
+  // Price will now come from the database
 
   let allProducts = [];
   let filteredProducts = [];
@@ -351,9 +345,7 @@
       const col = document.createElement('div');
       col.className = 'col-lg-4 col-md-6 mb-4';
 
-      const price = priceMap[product.id]
-        ? `₱${priceMap[product.id].toLocaleString()}`
-        : '₱N/A';
+      const price = product.price ? `₱${parseFloat(product.price).toLocaleString()}` : 'Price on request';
 
       // Hide cart functionality for admin users
       const cartSection = isAdmin ? `
@@ -381,7 +373,7 @@
                 <div class="carousel-inner">
                   ${product.images.map((img, idx) => `
                     <div class="carousel-item ${idx === 0 ? 'active' : ''}">
-                      <img src="${img}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x250?text=Product+Image'">
+                      <img src="${img}" class="card-img-top" alt="${product.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3QgSW1hZ2U8L3RleHQ+PC9zdmc+'">
                     </div>
                   `).join('')}
                 </div>
@@ -395,7 +387,7 @@
                 ` : ''}
               </div>
             ` : `
-              <img src="${product.img_path || 'https://via.placeholder.com/400x250?text=Product+Image'}" class="card-img-top" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x250?text=Product+Image'">
+              <img src="${product.img_path || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3QgSW1hZ2U8L3RleHQ+PC9zdmc+'}" class="card-img-top" alt="${product.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3QgSW1hZ2U8L3RleHQ+PC9zdmc+'">
             `}
             <div class="card-overlay">
               <div class="overlay-buttons">
@@ -529,10 +521,10 @@
         filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'price-low':
-        filteredProducts.sort((a, b) => (priceMap[a.id] || 0) - (priceMap[b.id] || 0));
+        filteredProducts.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
         break;
       case 'price-high':
-        filteredProducts.sort((a, b) => (priceMap[b.id] || 0) - (priceMap[a.id] || 0));
+        filteredProducts.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
         break;
       case 'newest':
         filteredProducts.sort((a, b) => b.id - a.id);

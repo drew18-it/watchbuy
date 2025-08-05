@@ -5,6 +5,7 @@
   <title>Product Details | WatchBuy</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/css/style.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -60,15 +61,6 @@
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
 
-    const prices = {
-      1: 2999,
-      2: 1499,
-      3: 899,
-      4: 1999,
-      5: 2499,
-      6: 1799
-    };
-
     if (!productId) {
       document.getElementById('productDetails').innerHTML = `
         <div class="card-body text-center py-5">
@@ -92,7 +84,7 @@
             return;
           }
 
-          const price = prices[product.id] ? `₱${prices[product.id].toLocaleString()}` : 'Price on request';
+          const price = product.price ? `₱${parseFloat(product.price).toLocaleString()}` : 'Price on request';
 
           // MULTI-IMAGE SUPPORT: Bootstrap carousel setup
           let imageCarouselHTML = '';
@@ -103,7 +95,7 @@
                   ${product.images.map((img, idx) => `
                     <div class="carousel-item ${idx === 0 ? 'active' : ''} h-100">
                       <img src="${img}" class="d-block w-100 h-100 object-fit-cover rounded-start"
-                        onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'">
+                        onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4='">
                     </div>`).join('')}
                 </div>
                 ${product.images.length > 1 ? `
@@ -117,7 +109,7 @@
             `;
           } else {
             imageCarouselHTML = `
-              <img src="https://via.placeholder.com/600x400?text=Product+Image" 
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3QgSW1hZ2U8L3RleHQ+PC9zdmc+" 
                    alt="${product.name}" 
                    class="img-fluid rounded-start h-100 object-fit-cover">
             `;
@@ -201,6 +193,72 @@
                 </div>
               </div>
             </div>
+            
+            <!-- Reviews Section -->
+            <div class="row mt-5">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="mb-0">
+                      <i class="bi bi-star-fill text-warning"></i> 
+                      Customer Reviews
+                      <span id="reviewCount" class="badge bg-secondary ms-2">0</span>
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <!-- Review Statistics -->
+                    <div id="reviewStats" class="mb-4 d-none">
+                      <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                          <h3 id="averageRating" class="text-primary mb-0">0.0</h3>
+                          <div id="starRating" class="text-warning mb-2"></div>
+                          <small class="text-muted">Based on <span id="totalReviews">0</span> reviews</small>
+                        </div>
+                        <div class="col-md-9">
+                          <div id="ratingBars"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Add Review Form (for logged in users) -->
+                    <div id="addReviewForm" class="mb-4 d-none">
+                      <h6>Write a Review</h6>
+                      <form id="reviewForm">
+                        <div class="mb-3">
+                          <label class="form-label">Rating</label>
+                          <div class="rating-input">
+                            <input type="radio" name="rating" value="5" id="star5" class="d-none">
+                            <label for="star5" class="star-label"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" name="rating" value="4" id="star4" class="d-none">
+                            <label for="star4" class="star-label"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" name="rating" value="3" id="star3" class="d-none">
+                            <label for="star3" class="star-label"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" name="rating" value="2" id="star2" class="d-none">
+                            <label for="star2" class="star-label"><i class="bi bi-star-fill"></i></label>
+                            <input type="radio" name="rating" value="1" id="star1" class="d-none">
+                            <label for="star1" class="star-label"><i class="bi bi-star-fill"></i></label>
+                          </div>
+                        </div>
+                        <div class="mb-3">
+                          <label for="reviewComment" class="form-label">Comment (optional)</label>
+                          <textarea id="reviewComment" name="comment" class="form-control" rows="3" placeholder="Share your experience with this product..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                      </form>
+                    </div>
+                    
+                    <!-- Reviews List -->
+                    <div id="reviewsList"></div>
+                    
+                    <!-- No Reviews Message -->
+                    <div id="noReviews" class="text-center text-muted py-4">
+                      <i class="bi bi-chat-dots fs-1"></i>
+                      <p class="mt-2">No reviews yet. Be the first to review this product!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           `;
         })
         .catch(err => {
@@ -250,7 +308,218 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       notify.info('Product Details', 'View product information and add to your cart');
+      
+      // Load reviews if product ID exists
+      if (productId) {
+        // Add a small delay to ensure product details are rendered first
+        setTimeout(() => {
+          loadReviews();
+          loadReviewStats();
+          checkUserReviewStatus();
+        }, 100);
+      }
+    });
+
+    // Load reviews for the product
+    async function loadReviews() {
+      try {
+        const response = await fetch(`/api/reviews/product/${productId}`);
+        const reviews = await response.json();
+        
+        const reviewsList = document.getElementById('reviewsList');
+        const noReviews = document.getElementById('noReviews');
+        const reviewCount = document.getElementById('reviewCount');
+        
+        reviewCount.textContent = reviews.length;
+        
+        if (reviews.length === 0) {
+          reviewsList.innerHTML = '';
+          noReviews.classList.remove('d-none');
+        } else {
+          noReviews.classList.add('d-none');
+          reviewsList.innerHTML = reviews.map(review => `
+            <div class="review-item border-bottom pb-3 mb-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="text-warning me-2">
+                      ${'<i class="bi bi-star-fill"></i>'.repeat(review.rating)}${'<i class="bi bi-star"></i>'.repeat(5-review.rating)}
+                    </div>
+                    <strong>${review.fname} ${review.lname}</strong>
+                    <small class="text-muted ms-2">${new Date(review.created_at).toLocaleDateString()}</small>
+                  </div>
+                  ${review.comment ? `<p class="mb-0">${review.comment}</p>` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+      }
+    }
+
+    // Load review statistics
+    async function loadReviewStats() {
+      try {
+        const response = await fetch(`/api/reviews/stats/${productId}`);
+        const stats = await response.json();
+        
+        const reviewStats = document.getElementById('reviewStats');
+        const averageRating = document.getElementById('averageRating');
+        const starRating = document.getElementById('starRating');
+        const totalReviews = document.getElementById('totalReviews');
+        const ratingBars = document.getElementById('ratingBars');
+        
+        if (stats.total_reviews > 0) {
+          reviewStats.classList.remove('d-none');
+          averageRating.textContent = stats.average_rating;
+          totalReviews.textContent = stats.total_reviews;
+          
+          // Create star rating display
+          const fullStars = Math.floor(stats.average_rating);
+          const hasHalfStar = stats.average_rating % 1 >= 0.5;
+          starRating.innerHTML = '<i class="bi bi-star-fill"></i>'.repeat(fullStars) + 
+            (hasHalfStar ? '<i class="bi bi-star-half"></i>' : '') + 
+            '<i class="bi bi-star"></i>'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
+          
+          // Create rating bars
+          ratingBars.innerHTML = [5, 4, 3, 2, 1].map(rating => {
+            const count = stats[`${rating}_star`] || 0;
+            const percentage = stats.total_reviews > 0 ? (count / stats.total_reviews * 100) : 0;
+            return `
+              <div class="d-flex align-items-center mb-1">
+                <span class="me-2 text-warning">
+                  <i class="bi bi-star-fill"></i> ${rating}
+                </span>
+                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                  <div class="progress-bar bg-warning" style="width: ${percentage}%"></div>
+                </div>
+                <small class="text-muted">${count}</small>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (error) {
+        console.error('Error loading review stats:', error);
+      }
+    }
+
+    // Check if user can add a review
+    async function checkUserReviewStatus() {
+      try {
+        const sessionResponse = await fetch('/session-data');
+        const sessionData = await sessionResponse.json();
+        
+        if (sessionData.loggedIn && sessionData.user.role !== 'admin') {
+          // Check if user has purchased this product
+          const purchaseCheckResponse = await fetch(`/api/reviews/reviewable-products`);
+          const reviewableProducts = await purchaseCheckResponse.json();
+          const hasPurchased = reviewableProducts.some(product => product.id == productId);
+          
+          if (hasPurchased) {
+            // Check if user already reviewed this product
+            const reviewsResponse = await fetch(`/api/reviews/product/${productId}`);
+            const reviews = await reviewsResponse.json();
+            const userReview = reviews.find(review => review.user_id === sessionData.user.id);
+            
+            if (!userReview) {
+              document.getElementById('addReviewForm').classList.remove('d-none');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user review status:', error);
+      }
+    }
+
+    // Handle review form submission
+    document.addEventListener('DOMContentLoaded', function() {
+      const reviewForm = document.getElementById('reviewForm');
+      if (reviewForm) {
+        reviewForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(reviewForm);
+          const rating = formData.get('rating');
+          const comment = formData.get('comment');
+          
+          if (!rating) {
+            notify.error('Rating Required', 'Please select a rating before submitting.');
+            return;
+          }
+          
+          notify.loading('Submitting review...');
+          
+          try {
+            const response = await fetch('/api/reviews', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                product_id: parseInt(productId),
+                rating: parseInt(rating),
+                comment: comment
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              notify.success('Review Submitted', 'Thank you for your review!');
+              reviewForm.reset();
+              document.getElementById('addReviewForm').classList.add('d-none');
+              loadReviews();
+              loadReviewStats();
+            } else {
+              notify.error('Review Failed', result.error || 'Failed to submit review.');
+            }
+          } catch (error) {
+            console.error('Error submitting review:', error);
+            notify.error('Error', 'An error occurred while submitting your review.');
+          }
+        });
+      }
     });
   </script>
+  
+  <style>
+    .rating-input {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 2px;
+    }
+    
+    .star-label {
+      font-size: 24px;
+      color: #ddd;
+      cursor: pointer;
+      transition: color 0.2s;
+      display: inline-block;
+    }
+    
+    .star-label:hover,
+    .star-label:hover ~ .star-label,
+    input[type="radio"]:checked ~ .star-label {
+      color: #ffc107;
+    }
+    
+    .star-label i {
+      font-size: 24px;
+    }
+    
+    .review-item {
+      transition: background-color 0.2s;
+    }
+    
+    .review-item:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .text-warning i {
+      font-size: 16px;
+    }
+  </style>
 </body>
 </html>

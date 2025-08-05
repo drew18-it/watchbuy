@@ -291,7 +291,7 @@
           const price = product.price ? `₱${product.price.toLocaleString()}` : 'Price on request';
           const imageSrc = product.img_path ? 
             (product.img_path.startsWith('/uploads/') ? product.img_path : `/uploads/${product.img_path}`) :
-            'https://via.placeholder.com/300x200?text=Product+Image';
+            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3QgSW1hZ2U8L3RleHQ+PC9zdmc+';
 
           return `
             <div class="col-md-6 col-lg-4">
@@ -300,7 +300,7 @@
                      class="card-img-top" 
                      alt="${product.name}" 
                      style="height: 200px; object-fit: cover;"
-                     onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4='">
                 <div class="card-body d-flex flex-column">
                   <h5 class="card-title">${product.name}</h5>
                   <p class="card-text flex-grow-1">${product.description || 'Premium timepiece with exceptional craftsmanship.'}</p>

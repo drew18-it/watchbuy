@@ -6,8 +6,22 @@
   <title>My Orders | WatchBuy</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/css/style.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+     <link href="/css/style.css" rel="stylesheet">
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   <style>
+     .rating-stars {
+       display: inline-flex;
+       gap: 5px;
+     }
+     .rating-stars i {
+       font-size: 1.5rem;
+       cursor: pointer;
+       transition: color 0.2s;
+     }
+     .rating-stars i:hover {
+       color: #ffc107 !important;
+     }
+   </style>
 </head>
 <body>
   <!-- Navigation -->
@@ -78,17 +92,31 @@
       </a>
     </div>
 
-    <!-- Orders Container -->
-    <div id="ordersContainer">
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-3 text-muted">Loading your orders...</p>
-      </div>
-    </div>
+         <!-- Orders Container -->
+     <div id="ordersContainer">
+       <div class="text-center py-5">
+         <div class="spinner-border text-primary" role="status">
+           <span class="visually-hidden">Loading...</span>
+         </div>
+         <p class="mt-3 text-muted">Loading your orders...</p>
+       </div>
+     </div>
+
+     <!-- Reviews Section -->
+     <div class="mt-5">
+       <h2 class="h3 mb-4">Review Your Purchases</h2>
+       <div id="reviewsContainer">
+         <div class="text-center py-3">
+           <div class="spinner-border text-primary" role="status">
+             <span class="visually-hidden">Loading...</span>
+           </div>
+           <p class="mt-2 text-muted">Loading products you can review...</p>
+         </div>
+       </div>
+     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
   <script src="/js/notifications.js"></script>
   <script>
     // Enhanced order loading with better UI and error handling
@@ -159,14 +187,21 @@
           const statusBadge = getStatusBadge(order.status);
           const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
           
-          const itemsList = order.items.map(item => `
+                               const itemsList = order.items.map(item => `
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-              <div>
+              <div class="flex-grow-1">
                 <strong>${item.name}</strong>
                 <br>
                 <small class="text-muted">Quantity: ${item.quantity}</small>
               </div>
-              <span class="badge bg-light text-dark">$${(item.price || 0).toFixed(2)}</span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-dark">₱${(parseFloat(item.price) || 0).toFixed(2)}</span>
+                                 ${order.status === 'paid' && item.product_id ? `
+                   <button class="btn btn-outline-primary btn-sm" onclick="showReviewModal(${item.product_id}, '${item.name.replace(/'/g, "\\'")}')">
+                     <i class="bi bi-star"></i> Review
+                   </button>
+                 ` : ''}
+              </div>
             </div>
           `).join('');
 
@@ -191,10 +226,10 @@
                 <div class="mb-3">
                   ${itemsList}
                 </div>
-                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                  <strong>Total:</strong>
-                  <strong class="text-primary">$${order.total || 0}</strong>
-                </div>
+                                 <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                   <strong>Total:</strong>
+                   <strong class="text-primary">₱${(parseFloat(order.total_amount) || 0).toFixed(2)}</strong>
+                 </div>
               </div>
             </div>
           `;
@@ -233,10 +268,299 @@
       </span>`;
     }
 
-    // Load orders when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      loadOrders();
-    });
+               // Load reviewable products
+      async function loadReviewableProducts() {
+        const reviewsContainer = document.getElementById('reviewsContainer');
+        
+        try {
+          console.log('Loading reviewable products...');
+          const response = await fetch('/api/reviews/reviewable-products');
+          console.log('Reviewable products response status:', response.status);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Reviewable products error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          }
+          
+          const products = await response.json();
+          console.log('Reviewable products received:', products);
+          
+          if (products.length === 0) {
+            reviewsContainer.innerHTML = `
+              <div class="text-center py-4">
+                <i class="bi bi-star text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-muted">No Products to Review</h5>
+                <p class="text-muted">You've reviewed all your purchased products or haven't completed any orders yet.</p>
+              </div>
+            `;
+            return;
+          }
+
+          reviewsContainer.innerHTML = products.map(product => `
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="row align-items-center">
+                                     <div class="col-md-2">
+                     <img src="${product.img_path ? (product.img_path.startsWith('/uploads/') ? product.img_path : `/uploads/${product.img_path}`) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb2R1Y3Q8L3RleHQ+PC9zdmc+'}" 
+                          class="img-fluid rounded" alt="${product.name}"
+                          style="height: 80px; object-fit: cover;">
+                   </div>
+                  <div class="col-md-6">
+                    <h6 class="mb-1">${product.name}</h6>
+                    <p class="text-muted mb-0">₱${parseFloat(product.price).toFixed(2)}</p>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <button class="btn btn-primary btn-sm" onclick="showReviewModal(${product.id}, '${product.name}')">
+                      <i class="bi bi-star"></i> Write Review
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+
+        } catch (err) {
+          console.error('Error loading reviewable products:', err);
+          reviewsContainer.innerHTML = `
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i> Unable to load products for review
+              <br><small class="text-muted">Error: ${err.message}</small>
+            </div>
+          `;
+        }
+      }
+
+                  // Show review modal
+       function showReviewModal(productId, productName) {
+         try {
+           console.log('Opening review modal for product:', productId, productName);
+           
+           // Check if bootstrap is available
+           if (typeof bootstrap === 'undefined') {
+             // Fallback to simple alert-based review
+             const rating = prompt('Rate this product (1-5 stars):');
+             if (rating && rating >= 1 && rating <= 5) {
+               const comment = prompt('Add a comment (optional):');
+               submitReviewSimple(productId, rating, comment);
+             }
+             return;
+           }
+
+           // Remove any existing modal first
+           const existingModal = document.getElementById('reviewModal');
+           if (existingModal) {
+             existingModal.remove();
+           }
+
+           const modal = document.createElement('div');
+           modal.className = 'modal fade';
+           modal.id = 'reviewModal';
+           modal.setAttribute('tabindex', '-1');
+           modal.setAttribute('aria-labelledby', 'reviewModalLabel');
+           modal.setAttribute('aria-hidden', 'true');
+          
+          modal.innerHTML = `
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="reviewModalLabel">Review ${productName}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="reviewForm">
+                    <input type="hidden" id="modalProductId" value="${productId}">
+                    <div class="mb-3">
+                      <label class="form-label">Rating *</label>
+                      <div class="rating-stars">
+                        <i class="bi bi-star" data-rating="1" style="cursor: pointer;"></i>
+                        <i class="bi bi-star" data-rating="2" style="cursor: pointer;"></i>
+                        <i class="bi bi-star" data-rating="3" style="cursor: pointer;"></i>
+                        <i class="bi bi-star" data-rating="4" style="cursor: pointer;"></i>
+                        <i class="bi bi-star" data-rating="5" style="cursor: pointer;"></i>
+                      </div>
+                      <input type="hidden" id="rating" name="rating" value="0">
+                      <div class="form-text">Click on the stars to rate this product</div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="comment" class="form-label">Comment (Optional)</label>
+                      <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Share your experience with this product..."></textarea>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          
+                   // Initialize Bootstrap modal
+          const modalInstance = new bootstrap.Modal(modal);
+          modalInstance.show();
+          
+          // Handle star rating
+          const stars = modal.querySelectorAll('.rating-stars i');
+          const ratingInput = modal.querySelector('#rating');
+          
+          stars.forEach(star => {
+            star.addEventListener('click', function() {
+              const rating = parseInt(this.dataset.rating);
+              ratingInput.value = rating;
+              
+              stars.forEach((s, index) => {
+                if (index < rating) {
+                  s.className = 'bi bi-star-fill text-warning';
+                } else {
+                  s.className = 'bi bi-star text-muted';
+                }
+              });
+            });
+            
+            star.addEventListener('mouseenter', function() {
+              const rating = parseInt(this.dataset.rating);
+              stars.forEach((s, index) => {
+                if (index < rating) {
+                  s.className = 'bi bi-star-fill text-warning';
+                } else {
+                  s.className = 'bi bi-star text-muted';
+                }
+              });
+            });
+            
+            star.addEventListener('mouseleave', function() {
+              const currentRating = parseInt(ratingInput.value);
+              stars.forEach((s, index) => {
+                if (index < currentRating) {
+                  s.className = 'bi bi-star-fill text-warning';
+                } else {
+                  s.className = 'bi bi-star text-muted';
+                }
+              });
+            });
+          });
+          
+          // Remove modal when hidden
+          modal.addEventListener('hidden.bs.modal', function() {
+            document.body.removeChild(modal);
+          });
+                 } catch (error) {
+            console.error('Error creating review modal:', error);
+            alert('Unable to open review form. Please try again.');
+          }
+        }
+
+               // Simple review submission function (fallback)
+        async function submitReviewSimple(productId, rating, comment) {
+          try {
+            console.log('Submitting simple review for product:', productId);
+            
+                         if (!productId || productId === 'undefined' || productId === 'null') {
+               alert('Product ID not found. Please try again.');
+               return;
+             }
+             
+             if (!rating || rating < 1 || rating > 5) {
+               alert('Please provide a valid rating (1-5 stars)');
+               return;
+             }
+            
+            const response = await fetch('/api/reviews', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                product_id: parseInt(productId),
+                rating: parseInt(rating),
+                comment: comment || ''
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              alert('Review submitted successfully!');
+              loadReviewableProducts();
+            } else {
+              alert(result.error || 'Failed to submit review');
+            }
+          } catch (err) {
+            console.error('Error submitting simple review:', err);
+            alert('Failed to submit review: ' + err.message);
+          }
+        }
+
+           // Submit review
+      async function submitReview() {
+        try {
+          const modal = document.getElementById('reviewModal');
+          if (!modal) {
+            alert('Review modal not found. Please try again.');
+            return;
+          }
+          
+          const productId = modal.querySelector('#modalProductId').value;
+          const rating = modal.querySelector('#rating').value;
+          const comment = modal.querySelector('#comment').value;
+          
+          console.log('Review data:', { productId, rating, comment });
+          
+                     if (!productId || productId === 'undefined' || productId === 'null') {
+             alert('Product ID not found. Please try again.');
+             return;
+           }
+           
+           if (!rating || rating < 1 || rating > 5) {
+             alert('Please select a valid rating (1-5 stars)');
+             return;
+           }
+          
+          console.log('Submitting review for product:', productId);
+          const response = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              product_id: parseInt(productId),
+              rating: parseInt(rating),
+              comment: comment || ''
+            })
+          });
+          
+          const result = await response.json();
+          console.log('Review submission response:', result);
+          
+          if (response.ok) {
+            // Close modal
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+              modalInstance.hide();
+            }
+            
+            // Show success message
+            alert('Review submitted successfully!');
+            
+            // Reload reviewable products
+            loadReviewableProducts();
+          } else {
+            alert(result.error || 'Failed to submit review');
+          }
+        } catch (err) {
+          console.error('Error submitting review:', err);
+          alert('Failed to submit review: ' + err.message);
+        }
+      }
+
+     // Load orders when page loads
+     document.addEventListener('DOMContentLoaded', () => {
+       loadOrders();
+       loadReviewableProducts();
+     });
   </script>
 
   <!-- Footer -->

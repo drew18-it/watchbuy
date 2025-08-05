@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
     console.log('Database connection test:', testResult);
 
     const [orders] = await db.query(
-      'SELECT id, created_at, status FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+      'SELECT id, created_at, status, total_amount FROM orders WHERE user_id = ? ORDER BY created_at DESC',
       [userId]
     );
 
@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
 
     for (const order of orders) {
       const [items] = await db.query(
-        `SELECT oi.quantity, p.name
+        `SELECT oi.quantity, oi.product_id, p.name, p.price
          FROM order_items oi
          JOIN products p ON oi.product_id = p.id
          WHERE oi.order_id = ?`,

@@ -38,13 +38,11 @@ router.get('/dashboard-stats', isAdmin, async (req, res) => {
     // Get total orders
     const [[orderCount]] = await db.query('SELECT COUNT(*) as count FROM orders');
     
-    // Get total revenue (sum of paid orders) - calculate from order items since total_amount doesn't exist
+    // Get total revenue (sum of paid orders) - now using total_amount field
     const [[revenue]] = await db.query(`
-      SELECT COALESCE(SUM(oi.quantity * p.price), 0) as total 
-      FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
-      JOIN orders o ON oi.order_id = o.id
-      WHERE o.status = 'paid'
+      SELECT COALESCE(SUM(total_amount), 0) as total 
+      FROM orders 
+      WHERE status = 'paid'
     `);
     
     // Get total products
@@ -229,12 +227,11 @@ router.put('/orders/:id/complete', isAdmin, async (req, res) => {
       WHERE oi.order_id = ?
     `, [orderId]);
 
-    // Calculate total amount from order items
+    // Get total amount from orders table
     const [totalResult] = await db.query(`
-      SELECT COALESCE(SUM(oi.quantity * p.price), 0) as total_amount
-      FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
-      WHERE oi.order_id = ?
+      SELECT COALESCE(total_amount, 0) as total_amount
+      FROM orders
+      WHERE id = ?
     `, [orderId]);
 
     const totalAmount = totalResult[0]?.total_amount || 0;
@@ -326,12 +323,11 @@ router.put('/orders/:id/cancel', isAdmin, async (req, res) => {
     `, [orderId]);
 
     if (orderDetails) {
-      // Calculate total amount from order items
+      // Get total amount from orders table
       const [totalResult] = await db.query(`
-        SELECT COALESCE(SUM(oi.quantity * p.price), 0) as total_amount
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        WHERE oi.order_id = ?
+        SELECT COALESCE(total_amount, 0) as total_amount
+        FROM orders
+        WHERE id = ?
       `, [orderId]);
 
       const totalAmount = totalResult[0]?.total_amount || 0;
@@ -443,12 +439,10 @@ router.get('/orders-per-month', isAdmin, async (req, res) => {
 router.get('/sales-per-month', isAdmin, async (req, res) => {
   try {
     const sql = `
-      SELECT MONTH(o.created_at) AS month, COALESCE(SUM(oi.quantity * p.price), 0) AS revenue
-      FROM orders o
-      JOIN order_items oi ON o.id = oi.order_id
-      JOIN products p ON oi.product_id = p.id
-      WHERE o.status = 'paid'
-      GROUP BY MONTH(o.created_at)
+      SELECT MONTH(created_at) AS month, COALESCE(SUM(total_amount), 0) AS revenue
+      FROM orders
+      WHERE status = 'paid'
+      GROUP BY MONTH(created_at)
     `;
     const [rows] = await db.query(sql);
     const salesByMonth = Array(12).fill(0); // Initialize 12 months

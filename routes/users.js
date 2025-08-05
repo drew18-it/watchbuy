@@ -40,9 +40,9 @@ router.post('/register', upload.single('img_path'), async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     await db.execute(`
-      INSERT INTO users (fname, lname, email, password, img_path, status)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [fname, lname, email, hashedPassword, imgPath, 'active']);
+      INSERT INTO users (fname, lname, email, password, img_path)
+      VALUES (?, ?, ?, ?, ?)
+    `, [fname, lname, email, hashedPassword, imgPath]);
 
     res.redirect('/login');
   } catch (err) {
@@ -64,11 +64,6 @@ router.post('/login', async (req, res) => {
     }
 
     const user = users[0];
-
-    // Block login if user is inactive
-    if (user.status !== 'active') {
-      return res.status(403).send('Your account is inactive. Please contact the administrator.');
-    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

@@ -81,11 +81,11 @@ router.get('/:id', async (req, res) => {
 
 // Create product (multiple images)
 router.post('/', upload.array('images', 5), async (req, res) => {
-  const { name, description, quantity, category_id } = req.body;
+  const { name, description, quantity, category_id, price } = req.body;
   try {
     const [result] = await db.query(
-      'INSERT INTO products (name, description, quantity, category_id) VALUES (?, ?, ?, ?)',
-      [name, description, quantity || 0, category_id || null]
+      'INSERT INTO products (name, description, quantity, category_id, price) VALUES (?, ?, ?, ?, ?)',
+      [name, description, quantity || 0, category_id || null, price || 0]
     );
     const productId = result.insertId;
     if (req.files && req.files.length > 0) {
@@ -102,11 +102,11 @@ router.post('/', upload.array('images', 5), async (req, res) => {
 // Update product (multiple images)
 router.put('/:id', upload.array('images', 5), async (req, res) => {
   const { id } = req.params;
-  const { name, description, quantity, category_id } = req.body;
+  const { name, description, quantity, category_id, price } = req.body;
   try {
     await db.query(
-      'UPDATE products SET name = ?, description = ?, quantity = ?, category_id = ? WHERE id = ?',
-      [name, description, quantity, category_id, id]
+      'UPDATE products SET name = ?, description = ?, quantity = ?, category_id = ?, price = ? WHERE id = ?',
+      [name, description, quantity, category_id, price || 0, id]
     );
     if (req.files && req.files.length > 0) {
       // Optionally, delete old images here if you want to replace
